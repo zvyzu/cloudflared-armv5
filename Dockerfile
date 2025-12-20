@@ -48,8 +48,9 @@ RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=5 go build -o /cloudflared/cloudflared ./cmd/cloudflared
 
 # Stage 2: Minimal runtime image
-# Stage 2: Minimal runtime image
 FROM scratch
+
+ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Copy root CA certificates from the builder stage
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
@@ -58,4 +59,4 @@ COPY --from=builder /cloudflared/cloudflared /usr/local/bin/cloudflared
 
 ENV TUNNEL_TOKEN=""
 
-CMD ["/usr/local/bin/cloudflared", "tunnel", "--no-autoupdate", "run"]
+CMD ["sh", "-c", "cloudflared tunnel --no-autoupdate run --token $TUNNEL_TOKEN"]
