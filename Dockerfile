@@ -19,8 +19,8 @@ COPY ${GO_TOOLCHAIN_TARBALL} /tmp/
 RUN mkdir -p /usr/local/go && \
     tar -C /usr/local/go -xzf /tmp/${GO_TOOLCHAIN_TARBALL} && \
     if [ -d /usr/local/go/bin/linux_arm ]; then \
-        mv -f /usr/local/go/bin/linux_arm/* /usr/local/go/bin/ && \
-        rmdir /usr/local/go/bin/linux_arm; \
+    mv -f /usr/local/go/bin/linux_arm/* /usr/local/go/bin/ && \
+    rmdir /usr/local/go/bin/linux_arm; \
     fi && \
     rm /tmp/${GO_TOOLCHAIN_TARBALL}
 
@@ -45,17 +45,17 @@ RUN chmod +x /usr/local/go/bin/go
 
 RUN go mod download
 
-RUN GOOS=linux GOARCH=arm GOARM=5 go build -o /cloudflared/cloudflared ./cmd/cloudflared
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=5 go build -o /cloudflared/cloudflared ./cmd/cloudflared
 
 # Stage 2: Minimal runtime image
-FROM debian:bookworm-slim
+# Stage 2: Minimal runtime image
+FROM scratch
 
-ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl && rm -rf /var/lib/apt/lists/*
+# Copy root CA certificates from the builder stage
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /cloudflared/cloudflared /usr/local/bin/cloudflared
 
 ENV TUNNEL_TOKEN=""
 
-CMD ["sh", "-c", "cloudflared tunnel --no-autoupdate run --token $TUNNEL_TOKEN"]
+CMD ["/usr/local/bin/cloudflared", "tunnel", "--no-autoupdate", "run"]
