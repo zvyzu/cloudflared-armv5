@@ -59,4 +59,4 @@ COPY --from=builder /cloudflared/cloudflared /usr/local/bin/cloudflared
 
 ENV TUNNEL_TOKEN=""
 
-CMD ["sh", "-c", "cloudflared", "tunnel", "--no-autoupdate", "run", "--token", "$TUNNEL_TOKEN"]
+CMD ["cloudflared", "tunnel", "--no-autoupdate", "run"]
