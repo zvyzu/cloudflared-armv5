@@ -59,4 +59,4 @@ COPY --from=builder /cloudflared/cloudflared /usr/local/bin/cloudflared
 
 # command / entrypoint of container
 ENTRYPOINT ["cloudflared"]
-CMD ["tunnel", "run", "--no-autoupdate"]
+CMD ["tunnel", "--no-autoupdate", "run"]
