@@ -48,7 +48,7 @@ RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=5 go build -o /cloudflared/cloudflared ./cmd/cloudflared
 
 # Stage 2: Minimal runtime image
-FROM scratch
+FROM busybox:stable-glibc
 
 ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
