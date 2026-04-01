@@ -50,7 +50,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=5 go build -o /cloudflared/cloudfl
 # Stage 2: Minimal runtime image
 FROM busybox:stable-glibc
 
-ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Copy root CA certificates from the builder stage
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
