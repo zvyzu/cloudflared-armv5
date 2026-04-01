@@ -57,4 +57,6 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /cloudflared/cloudflared /usr/local/bin/cloudflared
 
-CMD ["cloudflared", "tunnel", "--no-autoupdate", "run"]
+# command / entrypoint of container
+ENTRYPOINT ["cloudflared", "--no-autoupdate"]
+CMD ["version"]
