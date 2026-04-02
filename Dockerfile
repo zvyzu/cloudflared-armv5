@@ -1,5 +1,5 @@
 # Stage 1: Use Debian base for building cloudflared
-FROM debian:bookworm AS builder
+FROM debian:stable AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 
