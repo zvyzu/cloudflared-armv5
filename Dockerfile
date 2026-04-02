@@ -45,13 +45,6 @@ RUN chmod +x /usr/local/go/bin/go
 
 RUN go mod download
 
-RUN go get -u google.golang.org/grpc \
-              golang.org/x/crypto \
-              golang.org/x/net \
-              github.com/go-chi/chi/v5
-
-RUN go mod tidy
-
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=5 go build -o /cloudflared/cloudflared ./cmd/cloudflared
 
 # Stage 2: Minimal runtime image
