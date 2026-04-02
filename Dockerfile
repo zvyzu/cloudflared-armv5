@@ -52,10 +52,18 @@ FROM busybox:stable-glibc
 
 ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 
+RUN addgroup -g 10000 cloudflared && \
+    adduser -D -H -u 10000 -G cloudflared cloudflared
+
+RUN mkdir -p /etc/cloudflared && \
+    chown 10000:10000 /etc/cloudflared
+
 # Copy root CA certificates from the builder stage
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-COPY --from=builder /cloudflared/cloudflared /usr/local/bin/cloudflared
+COPY --from=builder --chown=10000:10000 /cloudflared/cloudflared /usr/local/bin/cloudflared
+
+USER 10000:10000
 
 # command / entrypoint of container
 ENTRYPOINT ["cloudflared"]
