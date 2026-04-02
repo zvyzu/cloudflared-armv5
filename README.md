@@ -55,8 +55,8 @@ This guide outlines a robust, multi-stage Docker build process to create a Cloud
 
 - **Stage 2: Runtime**
 
-  - **Base Image**: Debian stable-slim for a lightweight runtime environment.
-  - **Setup**: Install only essential runtime dependencies (`ca-certificates`, `curl`).
+  - **Base Image**: Busybox stable-glibc for a lightweight runtime environment.
+  - **Setup**: Install only essential runtime dependencies (`ca-certificates`).
   - **Copy Binary**: Copy the Cloudflared binary from the builder stage.
   - **Entrypoint**: Run Cloudflared with the tunnel token passed as an environment variable.
 
@@ -124,7 +124,7 @@ https://github.com/cloudflare/cloudflared/blob/master/LICENSE
 
 ## ⚠️ Disclaimer
 
-This project only provides container packaging for ARMv5 environments.
+This project only provides container for ARMv5 environments.
 
 It is:
 
