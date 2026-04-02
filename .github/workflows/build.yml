@@ -122,8 +122,8 @@ jobs:
           context: .
           push: true
           tags: |
-            vyzu/cloudflared-armv5:${{ steps.check_release.outputs.new_version }}
-            vyzu/cloudflared-armv5:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:${{ steps.check_release.outputs.new_version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:latest
             ghcr.io/${{ github.repository_owner }}/cloudflared-armv5:${{ steps.check_release.outputs.new_version }}
             ghcr.io/${{ github.repository_owner }}/cloudflared-armv5:latest
           build-args: |
