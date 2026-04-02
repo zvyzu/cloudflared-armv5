@@ -56,14 +56,22 @@ echo "=== END DIAGNOSTICS ==="
 GO_MOD_VERSION_LINE=$(grep '^go ' "$CLOUDFLARED_TMP_DIR/go.mod" | awk '{print $2}')
 
 if [[ "$GO_MOD_VERSION_LINE" =~ ^([0-9]+\.[0-9]+)$ ]]; then
-  # Version like "1.24" -> convert to "1.24.0"
-  GO_FULL_VERSION="${BASH_REMATCH[1]}.0"
+  # Version like "1.24", find recent patch (example: 1.24.8) from Golang Repository
+  BASE_VER="${BASH_REMATCH[1]}"
+  
+  LATEST_PATCH=$(git ls-remote --tags https://github.com/golang/go.git | grep -o "refs/tags/go${BASE_VER}\.[0-9]*$" | awk -F. '{print $NF}' | sort -n | tail -1)
+  
+  if [ -z "$LATEST_PATCH" ]; then
+      GO_FULL_VERSION="${BASE_VER}.0"
+      echo "Patch not found, using base version: $GO_FULL_VERSION"
+  else
+      GO_FULL_VERSION="${BASE_VER}.${LATEST_PATCH}"
+  fi
+
 elif [[ "$GO_MOD_VERSION_LINE" =~ ^([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-  # Version like "1.24.2" -> use as-is
   GO_FULL_VERSION="${BASH_REMATCH[1]}"
 else
   echo "ERROR: Could not parse Go version from cloudflared upstream go.mod"
-  echo "  go.mod line was: $GO_MOD_VERSION_LINE"
   exit 1
 fi
 
