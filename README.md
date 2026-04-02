@@ -87,6 +87,11 @@ docker run -d --restart unless-stopped \
 
 ### Deploy on MikroTik
 
+Set your MikroTik container registry to:
+```
+https://registry-1.docker.io
+```
+
 Example command:
 ```bash
 /container/add remote-image=vyzu/cloudflared-armv5:latest interface=veth1 root-dir=disk1/images/cloudflared-armv5 envlist=TUNNEL_TOKEN name=cloudflared-armv5
