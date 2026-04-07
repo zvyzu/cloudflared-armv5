@@ -66,6 +66,8 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
 COPY --from=builder --chown=65532:65532 /cloudflared/cloudflared /usr/local/bin/cloudflared
 
+ENV TZ=UTC
+
 USER 65532:65532
 
 # command / entrypoint of container
