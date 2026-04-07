@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libssl-dev \
     ca-certificates \
     curl \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the Go toolchain built for ARMv5, with version auto-detected by build script
@@ -52,18 +53,20 @@ FROM busybox:stable-glibc
 
 ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 
-RUN addgroup -g 10000 cloudflared && \
-    adduser -D -H -u 10000 -G cloudflared cloudflared
+RUN addgroup -g 65532 cloudflared && \
+    adduser -D -H -u 65532 -G cloudflared cloudflared
 
 RUN mkdir -p /etc/cloudflared && \
-    chown 10000:10000 /etc/cloudflared
+    chown 65532:65532 /etc/cloudflared
 
 # Copy root CA certificates from the builder stage
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-COPY --from=builder --chown=10000:10000 /cloudflared/cloudflared /usr/local/bin/cloudflared
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
-USER 10000:10000
+COPY --from=builder --chown=65532:65532 /cloudflared/cloudflared /usr/local/bin/cloudflared
+
+USER 65532:65532
 
 # command / entrypoint of container
 ENTRYPOINT ["cloudflared"]
