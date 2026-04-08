@@ -64,7 +64,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
-COPY --from=builder --chown=10001:10001 /cloudflared/cloudflared /usr/local/bin/cloudflared
+COPY --from=builder --chown=10001:10001 --chmod=755 /cloudflared/cloudflared /usr/local/bin/cloudflared
 
 ENV TZ=UTC
 
