@@ -1,18 +1,21 @@
 #!/bin/bash
+
 set -euo pipefail
 
 # Usage:
-#   CLOUDFLARED_VERSION=<tag_or_branch> ./build-cloudflared-armv5.sh
-#   or
-#   ./build-cloudflared-armv5.sh <tag_or_branch>
+# CLOUDFLARED_VERSION= ./build-cloudflared-armv5.sh
+# or
+# ./build-cloudflared-armv5.sh
 # If not specified, defaults to latest upstream tag
 
 # Multi-stage Go bootstrap build for ARMv5 toolchain
 # 1. Uses Go 1.20.7 binary to bootstrap Go 1.22.6 (amd64)
-# 2. Uses Go 1.22.6 to bootstrap the required Go version for ARMv5 (scraped from upstream cloudflared config)
-# 3. Packages the resulting toolchain for Docker
+# 2. Uses Go 1.22.6 to bootstrap Go 1.24.6 (amd64)
+# 3. Uses Go 1.24.6 to bootstrap the required Go version for ARMv5 (scraped from upstream cloudflared config)
+# 4. Packages the resulting toolchain for Docker
 
 # Step 0: Get the required cloudflared version and Go version
+
 CLOUDFLARED_REPO_URL="https://github.com/cloudflare/cloudflared.git"
 CLOUDFLARED_TMP_DIR="cloudflared-upstream-tmp"
 
@@ -56,22 +59,14 @@ echo "=== END DIAGNOSTICS ==="
 GO_MOD_VERSION_LINE=$(grep '^go ' "$CLOUDFLARED_TMP_DIR/go.mod" | awk '{print $2}')
 
 if [[ "$GO_MOD_VERSION_LINE" =~ ^([0-9]+\.[0-9]+)$ ]]; then
-  # Version like "1.24", find recent patch (example: 1.24.8) from Golang Repository
-  BASE_VER="${BASH_REMATCH[1]}"
-  
-  LATEST_PATCH=$(git ls-remote --tags https://github.com/golang/go.git | grep -o "refs/tags/go${BASE_VER}\.[0-9]*$" | awk -F. '{print $NF}' | sort -n | tail -1)
-  
-  if [ -z "$LATEST_PATCH" ]; then
-      GO_FULL_VERSION="${BASE_VER}.0"
-      echo "Patch not found, using base version: $GO_FULL_VERSION"
-  else
-      GO_FULL_VERSION="${BASE_VER}.${LATEST_PATCH}"
-  fi
-
+  # Version like "1.24" -> convert to "1.24.0"
+  GO_FULL_VERSION="${BASH_REMATCH[1]}.0"
 elif [[ "$GO_MOD_VERSION_LINE" =~ ^([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+  # Version like "1.24.2" -> use as-is
   GO_FULL_VERSION="${BASH_REMATCH[1]}"
 else
   echo "ERROR: Could not parse Go version from cloudflared upstream go.mod"
+  echo "  go.mod line was: $GO_MOD_VERSION_LINE"
   exit 1
 fi
 
@@ -113,7 +108,22 @@ cd "$STAGE1_GO_SRC_DIR/src"
 GOOS=linux GOARCH=amd64 ./make.bash
 cd ../..
 
-# --- Stage 2: Build Go $GO_VERSION for ARMv5 using Go 1.22.6 (stage1) ---
+# --- Stage 1.5: Build Go 1.24.6 from source using Go 1.22.6 (stage1) ---
+STAGE1_5_GO_VERSION="go1.24.6"
+STAGE1_5_GO_SRC_DIR="go-src-stage1-5"
+
+rm -rf "$STAGE1_5_GO_SRC_DIR"
+git clone --depth 1 --branch "$STAGE1_5_GO_VERSION" https://go.googlesource.com/go "$STAGE1_5_GO_SRC_DIR"
+
+echo "Step 2.5: Build Go $STAGE1_5_GO_VERSION for amd64 using stage1 (Go 1.22.6)"
+export GOROOT_BOOTSTRAP="$(pwd)/$STAGE1_GO_SRC_DIR"
+export PATH="$GOROOT_BOOTSTRAP/bin:$PATH"
+
+cd "$STAGE1_5_GO_SRC_DIR/src"
+GOOS=linux GOARCH=amd64 ./make.bash
+cd ../..
+
+# --- Stage 2: Build Go $GO_VERSION for ARMv5 using Go 1.24.6 (stage1.5) ---
 GO_SRC_DIR="go-src"
 
 rm -rf "$GO_SRC_DIR"
@@ -134,8 +144,8 @@ else
   fi
 fi
 
-echo "Step 3: Build Go $GO_VERSION for linux/arm (ARMv5) using stage1 Go"
-export GOROOT_BOOTSTRAP="$(pwd)/../$STAGE1_GO_SRC_DIR"
+echo "Step 3: Build Go $GO_VERSION for linux/arm (ARMv5) using stage1.5 Go (Go 1.24.6)"
+export GOROOT_BOOTSTRAP="$(pwd)/../$STAGE1_5_GO_SRC_DIR"
 export PATH="$GOROOT_BOOTSTRAP/bin:$PATH"
 
 cd src
